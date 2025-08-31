@@ -1,0 +1,2172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>随机数生成器 | COC TRPG工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        accent: '#8B5CF6',
+                        danger: '#EF4444',
+                        warning: '#F59E0B',
+                        dark: {
+                            bg: '#121212',
+                            card: '#1E1E1E',
+                            text: '#E0E0E0',
+                            border: '#333333'
+                        },
+                        light: {
+                            bg: '#F3F4F6',
+                            card: '#FFFFFF',
+                            text: '#1F2937',
+                            border: '#E5E7EB'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-shadow {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            }
+            .dark .card-shadow {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            }
+            .btn-hover {
+                transition: all 0.2s ease;
+            }
+            .btn-hover:hover {
+                transform: translateY(-2px);
+            }
+            .scrollbar-thin {
+                scrollbar-width: thin;
+            }
+            .scrollbar-thin::-webkit-scrollbar {
+                width: 4px;
+                height: 4px;
+            }
+            .scrollbar-thin::-webkit-scrollbar-thumb {
+                background-color: rgba(156, 163, 175, 0.5);
+                border-radius: 2px;
+            }
+            .modal-backdrop {
+                backdrop-filter: blur(2px);
+            }
+            .delete-btn {
+                transition: all 0.2s ease;
+            }
+            .delete-btn:hover {
+                background-color: rgba(239, 68, 68, 0.1);
+                color: #EF4444;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light-bg min-h-screen font-sans text-light-text transition-colors duration-300">
+    <!-- 顶部导航 -->
+    <header class="bg-primary text-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-random text-xl"></i>
+                <h1 class="text-xl font-bold">随机数生成器</h1>
+            </div>
+            <div class="flex space-x-3">
+                <button id="themeToggle" class="p-2 rounded-full hover:bg-primary-700 transition-colors">
+                    <i class="fa fa-moon-o"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 导航标签 -->
+    <div class="bg-light-card shadow-sm border-b border-light-border sticky top-14 z-40 transition-colors duration-300">
+        <div class="container mx-auto">
+            <div class="flex overflow-x-auto scrollbar-thin">
+                <button id="tabGenerator" class="tab-btn flex-1 py-3 px-4 font-medium text-primary border-b-2 border-primary">
+                    <i class="fa fa-sliders mr-1"></i>生成器
+                </button>
+                <button id="tabHistory" class="tab-btn flex-1 py-3 px-4 font-medium text-light-text hover:text-primary transition-colors">
+                    <i class="fa fa-history mr-1"></i>历史记录
+                </button>
+                <button id="tabChecker" class="tab-btn flex-1 py-3 px-4 font-medium text-light-text hover:text-primary transition-colors">
+                    <i class="fa fa-check-square-o mr-1"></i>COC检定
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <main class="container mx-auto px-4 py-6 max-w-4xl">
+        <!-- 生成器标签内容 -->
+        <div id="contentGenerator" class="tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 参数设置卡片 -->
+                <div class="lg:col-span-1 space-y-6">
+                    <!-- 随机数设置卡片 -->
+                    <div class="bg-light-card rounded-xl p-5 card-shadow transition-colors duration-300">
+                        <h2 class="text-lg font-bold mb-4 flex items-center">
+                            <i class="fa fa-sliders text-primary mr-2"></i>随机数设置
+                        </h2>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-light-text mb-1 transition-colors duration-300">问题（可选）</label>
+                                <input type="text" id="randomQuestion" placeholder="输入问题..." 
+                                    class="w-full px-3 py-2 border border-light-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300 bg-light-card text-light-text">
+                            </div>
+                            
+                            <!-- 生成备注输入框 -->
+                            <div>
+                                <label class="block text-sm font-medium text-light-text mb-1 transition-colors duration-300">生成备注（可选）</label>
+                                <textarea id="randomCreationNote" placeholder="输入生成时的备注信息，可以换行..." 
+                                    class="w-full px-3 py-2 border border-light-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300 bg-light-card text-light-text min-h-[80px] resize-none"></textarea>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">此备注将随记录一起保存</p>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-light-text mb-1 transition-colors duration-300">最小值</label>
+                                    <input type="number" id="minValue" value="1" 
+                                        class="w-full px-3 py-2 border border-light-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300 bg-light-card text-light-text">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">范围: -999999999999 ~ 999999999998</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-light-text mb-1 transition-colors duration-300">最大值</label>
+                                    <input type="number" id="maxValue" value="100" 
+                                        class="w-full px-3 py-2 border border-light-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300 bg-light-card text-light-text">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">范围: -999999999999 ~ 999999999999</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-light-text mb-1 transition-colors duration-300">生成数量</label>
+                                <input type="number" id="randomCount" value="1" min="1" max="99999" 
+                                    class="w-full px-3 py-2 border border-light-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300 bg-light-card text-light-text">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-light-text mb-1 transition-colors duration-300">随机数种子</label>
+                                <select id="randomSeed" 
+                                    class="w-full px-3 py-2 border border-light-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300 bg-light-card text-light-text">
+                                    <option value="NANOSEC">NANOSEC</option>
+                                    <option value="SECURE">SECURE</option>
+                                    <option value="_RANDOM">_RANDOM</option>
+                                    <option value="UUID_RANDOM">UUID_RANDOM</option>
+                                    <option value="XORShift">XORShift</option>
+                                    <option value="UUID_SECURE_RANDOM">UUID_SECURE_RANDOM</option>
+                                    <option value="CPP_UNIFORM">C++ UNIFORM_INT_DISTRIBUTION</option>
+                                    <option value="TRUE_RANDOM">真随机数</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex items-center">
+                                <input type="checkbox" id="allowDuplicates" checked 
+                                    class="w-4 h-4 text-primary focus:ring-primary/50 border-light-border rounded transition-colors duration-300">
+                                <label for="allowDuplicates" class="ml-2 block text-sm text-light-text transition-colors duration-300">允许重复</label>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-light-text mb-1 transition-colors duration-300">分隔符</label>
+                                <div class="flex space-x-2">
+                                    <button class="separator-btn flex-1 py-2 border border-light-border rounded-l-lg bg-gray-100 dark:bg-dark-border hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 text-light-text" data-sep=",">逗号 (,)</button>
+                                    <button class="separator-btn flex-1 py-2 border-t border-b border-light-border bg-light-card dark:bg-dark-card hover:bg-gray-100 dark:hover:bg-dark-border transition-colors duration-300 text-light-text" data-sep="+">加号 (+)</button>
+                                    <input type="text" id="customSeparator" maxlength="1" placeholder="自定义" 
+                                        class="flex-1 px-2 py-2 border border-light-border rounded-r-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300 bg-light-card text-light-text text-center">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-light-text mb-1 transition-colors duration-300">加减值</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="text" id="valueModifiers" placeholder="例如: +10-5+3" 
+                                        class="flex-1 px-3 py-2 border border-light-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300 bg-light-card text-light-text">
+                                    <button id="clearModifiers" class="p-2 text-light-text hover:text-primary transition-colors duration-300">
+                                        <i class="fa fa-times-circle"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-light-text mb-1 transition-colors duration-300">计算模式</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="flex items-center p-3 border border-light-border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-border transition-colors duration-300">
+                                        <input type="radio" name="calcMode" value="sum" checked class="text-primary focus:ring-primary/50">
+                                        <span class="ml-2 text-sm text-light-text transition-colors duration-300">总和加减值</span>
+                                    </label>
+                                    <label class="flex items-center p-3 border border-light-border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-border transition-colors duration-300">
+                                        <input type="radio" name="calcMode" value="each" class="text-primary focus:ring-primary/50">
+                                        <span class="ml-2 text-sm text-light-text transition-colors duration-300">每个数加减值</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <button id="generateRandomBtn" class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 px-4 rounded-lg transition btn-hover flex items-center justify-center">
+                                <i class="fa fa-random mr-2"></i>生成随机数
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 结果显示区域 -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- 结果显示卡片 -->
+                    <div class="bg-light-card rounded-xl p-5 card-shadow transition-colors duration-300">
+                        <h2 class="text-lg font-bold mb-4 flex items-center">
+                            <i class="fa fa-bar-chart text-primary mr-2"></i>结果显示
+                        </h2>
+                        
+                        <div id="resultContainer" class="min-h-[200px] border border-light-border rounded-lg p-6 bg-light-bg dark:bg-dark-card flex flex-col items-center justify-center transition-colors duration-300">
+                            <div class="text-center">
+                                <i class="fa fa-random text-5xl text-gray-400 dark:text-gray-600 mb-4"></i>
+                                <p class="text-gray-500 dark:text-gray-400">生成的随机数将显示在这里</p>
+                                <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">设置参数并点击生成按钮开始</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 flex justify-between items-center">
+                            <button id="copyResultBtn" class="px-4 py-2 border border-light-border rounded-lg text-sm font-medium text-light-text hover:bg-gray-50 dark:hover:bg-dark-border transition-colors duration-300 flex items-center">
+                                <i class="fa fa-copy mr-1"></i>复制结果
+                            </button>
+                            <button id="saveToHistoryBtn" class="px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm font-medium hover:bg-primary/20 transition flex items-center">
+                                <i class="fa fa-save mr-1"></i>保存到历史
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 历史记录标签内容 -->
+        <div id="contentHistory" class="tab-content hidden">
+            <div class="bg-light-card rounded-xl p-5 card-shadow transition-colors duration-300">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold flex items-center">
+                        <i class="fa fa-history text-primary mr-2"></i>历史记录
+                    </h2>
+                    <div class="flex space-x-2">
+                        <button id="exportHistoryBtn" class="px-3 py-1 border border-light-border rounded-lg text-sm text-light-text hover:bg-gray-50 dark:hover:bg-dark-border transition-colors duration-300">
+                            <i class="fa fa-download mr-1"></i>导出
+                        </button>
+                        <button id="clearHistoryBtn" class="px-3 py-1 border border-light-border rounded-lg text-sm text-light-text hover:bg-gray-50 dark:hover:bg-dark-border transition-colors duration-300">
+                            <i class="fa fa-trash mr-1"></i>清空
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fa fa-search text-gray-400 dark:text-gray-500"></i>
+                    </div>
+                    <input type="text" id="historySearch" placeholder="搜索历史记录..." 
+                        class="w-full pl-10 pr-4 py-2 border border-light-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300 bg-light-card text-light-text">
+                </div>
+                
+                <div id="historyList" class="mt-4 max-h-[600px] overflow-y-auto scrollbar-thin space-y-4">
+                    <!-- 历史记录会通过JS动态添加 -->
+                    <div class="text-center text-gray-500 dark:text-gray-400 py-10">
+                        <i class="fa fa-folder-open-o text-3xl mb-2"></i>
+                        <p>历史记录为空</p>
+                        <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">生成随机数或检定后将显示在这里</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- COC检定标签内容 -->
+        <div id="contentChecker" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 检定设置卡片 -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="bg-light-card rounded-xl p-5 card-shadow transition-colors duration-300">
+                        <h2 class="text-lg font-bold mb-4 flex items-center">
+                            <i class="fa fa-check-square-o text-primary mr-2"></i>COC检定设置
+                        </h2>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-light-text mb-1 transition-colors duration-300">问题（可选）</label>
+                                <input type="text" id="checkQuestion" placeholder="输入检定问题..." 
+                                    class="w-full px-3 py-2 border border-light-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300 bg-light-card text-light-text">
+                            </div>
+                            
+                            <!-- 生成备注输入框 -->
+                            <div>
+                                <label class="block text-sm font-medium text-light-text mb-1 transition-colors duration-300">生成备注（可选）</label>
+                                <textarea id="checkCreationNote" placeholder="输入生成时的备注信息，可以换行..." 
+                                    class="w-full px-3 py-2 border border-light-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300 bg-light-card text-light-text min-h-[80px] resize-none"></textarea>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">此备注将随记录一起保存</p>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-light-text mb-1 transition-colors duration-300">技能数值</label>
+                                <input type="number" id="skillValue" value="50" min="1" max="100" 
+                                    class="w-full px-3 py-2 border border-light-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300 bg-light-card text-light-text">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-light-text mb-1 transition-colors duration-300">检定数量</label>
+                                <input type="number" id="checkCount" value="1" min="1" max="99999" 
+                                    class="w-full px-3 py-2 border border-light-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300 bg-light-card text-light-text">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-light-text mb-1 transition-colors duration-300">随机数种子</label>
+                                <select id="checkSeed" 
+                                    class="w-full px-3 py-2 border border-light-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300 bg-light-card text-light-text">
+                                    <option value="NANOSEC">NANOSEC</option>
+                                    <option value="SECURE">SECURE</option>
+                                    <option value="_RANDOM">_RANDOM</option>
+                                    <option value="UUID_RANDOM">UUID_RANDOM</option>
+                                    <option value="XORShift">XORShift</option>
+                                    <option value="UUID_SECURE_RANDOM">UUID_SECURE_RANDOM</option>
+                                    <option value="CPP_UNIFORM">C++ UNIFORM_INT_DISTRIBUTION</option>
+                                    <option value="TRUE_RANDOM">真随机数</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-light-text mb-1 transition-colors duration-300">检定加减值</label>
+                                <div class="flex items-center space-x-2">
+                                    <select id="modifierTarget" class="px-2 py-2 border border-light-border rounded-l-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300 bg-light-card text-light-text text-sm">
+                                        <option value="result">针对结果</option>
+                                        <option value="skill">针对技能值</option>
+                                    </select>
+                                    <input type="text" id="checkModifiers" placeholder="例如: +10-5+3" 
+                                        class="flex-1 px-3 py-2 border-t border-b border-light-border focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300 bg-light-card text-light-text">
+                                    <button id="clearCheckModifiers" class="p-2 text-light-text hover:text-primary transition-colors duration-300">
+                                        <i class="fa fa-times-circle"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <button id="performCheckBtn" class="w-full bg-secondary hover:bg-secondary/90 text-white font-medium py-3 px-4 rounded-lg transition btn-hover flex items-center justify-center">
+                                <i class="fa fa-dice text-white mr-2"></i>进行检定
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 检定结果区域 -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- 结果显示卡片 -->
+                    <div class="bg-light-card rounded-xl p-5 card-shadow transition-colors duration-300">
+                        <h2 class="text-lg font-bold mb-4 flex items-center">
+                            <i class="fa fa-bar-chart text-primary mr-2"></i>检定结果
+                        </h2>
+                        
+                        <div id="checkResultContainer" class="min-h-[200px] border border-light-border rounded-lg p-6 bg-light-bg dark:bg-dark-card flex flex-col items-center justify-center transition-colors duration-300">
+                            <div class="text-center">
+                                <i class="fa fa-dice text-5xl text-gray-400 dark:text-gray-600 mb-4"></i>
+                                <p class="text-gray-500 dark:text-gray-400">检定结果将显示在这里</p>
+                                <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">设置参数并点击检定按钮开始</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 flex justify-between items-center">
+                            <button id="copyCheckResultBtn" class="px-4 py-2 border border-light-border rounded-lg text-sm font-medium text-light-text hover:bg-gray-50 dark:hover:bg-dark-border transition-colors duration-300 flex items-center">
+                                <i class="fa fa-copy mr-1"></i>复制结果
+                            </button>
+                            <button id="saveCheckToHistoryBtn" class="px-4 py-2 bg-secondary/10 text-secondary rounded-lg text-sm font-medium hover:bg-secondary/20 transition flex items-center">
+                                <i class="fa fa-save mr-1"></i>保存到历史
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 检定结果说明 -->
+                    <div class="bg-light-card rounded-xl p-5 card-shadow transition-colors duration-300">
+                        <h2 class="text-lg font-bold mb-4 flex items-center">
+                            <i class="fa fa-info-circle text-primary mr-2"></i>检定结果说明
+                        </h2>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                            <div class="p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg transition-colors duration-300">
+                                <div class="font-bold text-red-600 dark:text-red-400">大失败</div>
+                                <div>96-100</div>
+                            </div>
+                            <div class="p-3 bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-lg transition-colors duration-300">
+                                <div class="font-bold text-orange-600 dark:text-orange-400">失败</div>
+                                <div>> 技能值</div>
+                            </div>
+                            <div class="p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg transition-colors duration-300">
+                                <div class="font-bold text-blue-600 dark:text-blue-400">普通成功</div>
+                                <div>≤ 技能值</div>
+                            </div>
+                            <div class="p-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg transition-colors duration-300">
+                                <div class="font-bold text-green-600 dark:text-green-400">困难成功</div>
+                                <div>≤ 1/2技能值</div>
+                            </div>
+                            <div class="p-3 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded-lg transition-colors duration-300">
+                                <div class="font-bold text-purple-600 dark:text-purple-400">极难成功</div>
+                                <div>≤ 1/5技能值</div>
+                            </div>
+                            <div class="p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg transition-colors duration-300">
+                                <div class="font-bold text-yellow-600 dark:text-yellow-400">大成功</div>
+                                <div>1-5</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- 历史记录详情模态框 -->
+    <div id="historyDetailModal" class="fixed inset-0 bg-black/50 modal-backdrop z-50 flex items-center justify-center hidden">
+        <div class="bg-light-card dark:bg-dark-card rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto m-4 transform transition-all duration-300 scale-95 opacity-0" id="modalContentWrapper">
+            <div class="p-5 border-b border-light-border dark:border-dark-border flex justify-between items-center sticky top-0 bg-light-card dark:bg-dark-card z-10 transition-colors duration-300">
+                <h3 class="text-lg font-bold text-light-text dark:text-light-text" id="modalTitle">历史记录详情</h3>
+                <div class="flex space-x-2">
+                    <button id="addHistoryNoteBtn" class="text-primary hover:text-primary/80 p-2 rounded-full hover:bg-primary/10 transition-colors duration-300">
+                        <i class="fa fa-plus"></i>
+                    </button>
+                    <button id="deleteRecordBtn" class="text-danger hover:text-danger/80 p-2 rounded-full hover:bg-danger/10 transition-colors duration-300">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                    <button id="closeModalBtn" class="text-light-text hover:text-gray-400 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-border transition-colors duration-300">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-5" id="modalContent">
+                <!-- 模态框内容将通过JS动态添加 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 备注编辑模态框 -->
+    <div id="noteEditorModal" class="fixed inset-0 bg-black/50 modal-backdrop z-50 flex items-center justify-center hidden">
+        <div class="bg-light-card dark:bg-dark-card rounded-xl max-w-md w-full max-h-[60vh] overflow-y-auto m-4 transform transition-all duration-300 scale-95 opacity-0" id="noteEditorWrapper">
+            <div class="p-5 border-b border-light-border dark:border-dark-border flex justify-between items-center sticky top-0 bg-light-card dark:bg-dark-card z-10 transition-colors duration-300">
+                <h3 class="text-lg font-bold text-light-text dark:text-light-text" id="noteEditorTitle">编辑备注</h3>
+                <button id="closeNoteEditorBtn" class="text-light-text hover:text-gray-400 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-border transition-colors duration-300">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-5">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-light-text mb-2 transition-colors duration-300">备注内容（支持换行）</label>
+                    <textarea id="noteEditorContent" class="w-full px-3 py-3 border border-light-border rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors duration-300 bg-light-card text-light-text min-h-[200px] resize-none" placeholder="输入备注内容，可以换行..."></textarea>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button id="cancelNoteEditorBtn" class="px-4 py-2 border border-light-border rounded-lg text-sm font-medium text-light-text hover:bg-gray-50 dark:hover:bg-dark-border transition-colors duration-300">取消</button>
+                    <button id="saveNoteEditorBtn" class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors duration-300">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 底部信息 -->
+    <footer class="bg-light-card dark:bg-dark-card text-light-text dark:text-light-text py-6 mt-12 border-t border-light-border dark:border-dark-border transition-colors duration-300">
+        <div class="container mx-auto px-4 text-center">
+            <p class="mb-2">随机数生成器 | COC TRPG工具</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">支持离线使用，所有数据保存在本地浏览器中</p>
+        </div>
+    </footer>
+</body>
+
+<script>
+// 全局变量
+let currentResult = null;
+let currentType = null; // 'random' 或 'check'
+let historyRecords = []; // 历史记录数据
+let selectedSeparator = ',';
+let currentHistoryIndex = -1; // 当前查看的历史记录索引
+let currentNoteId = null; // 当前编辑的备注ID
+let isDarkMode = false;
+const STORAGE_KEY = 'randomGeneratorHistory'; // 统一存储键名
+
+// DOM 加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM加载完成，开始初始化应用');
+    
+    // 加载历史记录
+    loadHistoryRecords();
+    
+    // 初始化主题
+    initTheme();
+    
+    // 初始化标签切换
+    initTabs();
+    
+    // 初始化分隔符按钮
+    initSeparatorButtons();
+    
+    // 初始化备注输入框自动高度调整
+    initAutoResizeTextarea();
+    
+    // 初始化事件监听器
+    initEventListeners();
+    
+    // 如果有历史记录，更新显示
+    if (historyRecords.length > 0) {
+        updateHistoryList();
+    }
+    
+    // 设置默认值
+    document.getElementById('minValue').value = 1;
+    document.getElementById('maxValue').value = 100;
+    
+    console.log('应用初始化完成');
+});
+
+// 加载历史记录 - 处理数据迁移和兼容性
+function loadHistoryRecords() {
+    try {
+        // 尝试从主要存储键加载
+        const storedData = localStorage.getItem(STORAGE_KEY);
+        
+        if (storedData) {
+            historyRecords = JSON.parse(storedData);
+            
+            // 数据迁移：处理不同版本的数据结构
+            historyRecords.forEach(record => {
+                // 确保生成备注存在
+                if (!record.creationNote) record.creationNote = '';
+                
+                // 如果历史备注不是数组，初始化为空数组
+                if (!Array.isArray(record.note)) {
+                    record.note = [];
+                }
+            });
+            
+            console.log(`从${STORAGE_KEY}加载历史记录，共${historyRecords.length}条`);
+            return;
+        }
+        
+        // 如果没有任何历史记录
+        historyRecords = [];
+        console.log('没有找到历史记录');
+        
+    } catch (error) {
+        console.error('加载历史记录失败:', error);
+        historyRecords = [];
+        
+        // 尝试修复损坏的数据
+        if (confirm('历史记录数据可能已损坏，是否清除所有历史记录？')) {
+            localStorage.removeItem(STORAGE_KEY);
+        }
+    }
+}
+
+// 保存历史记录
+function saveHistoryRecords() {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(historyRecords));
+        console.log(`保存历史记录，共${historyRecords.length}条`);
+    } catch (error) {
+        console.error('保存历史记录失败:', error);
+        alert('保存历史记录失败，请检查浏览器存储权限');
+    }
+}
+
+// 初始化主题
+function initTheme() {
+    // 从localStorage获取主题设置
+    const savedTheme = localStorage.getItem('randomGeneratorTheme');
+    isDarkMode = savedTheme === 'dark';
+    
+    // 应用主题
+    if (isDarkMode) {
+        document.body.classList.add('dark');
+        document.body.classList.add('bg-dark-bg', 'text-dark-text');
+        document.body.classList.remove('bg-light-bg', 'text-light-text');
+        document.querySelector('#themeToggle i').classList.remove('fa-moon-o');
+        document.querySelector('#themeToggle i').classList.add('fa-sun-o');
+    } else {
+        document.body.classList.remove('dark');
+        document.body.classList.remove('bg-dark-bg', 'text-dark-text'); // 移除暗色模式类
+        document.body.classList.add('bg-light-bg', 'text-light-text'); // 添加亮色模式类
+        document.querySelector('#themeToggle i').classList.remove('fa-sun-o');
+        document.querySelector('#themeToggle i').classList.add('fa-moon-o');
+    }
+}
+
+// 切换主题
+function toggleTheme() {
+    isDarkMode = !isDarkMode;
+    localStorage.setItem('randomGeneratorTheme', isDarkMode ? 'dark' : 'light');
+    initTheme();
+    updateThemeElements();
+}
+
+// 更新主题元素
+function updateThemeElements() {
+    // 手动更新一些需要特殊处理的元素
+    document.querySelectorAll('.history-item').forEach(item => {
+        if (isDarkMode) {
+            item.classList.add('bg-dark-card', 'border-dark-border', 'text-dark-text');
+            item.classList.remove('bg-light-card', 'border-light-border', 'text-light-text');
+        } else {
+            item.classList.remove('bg-dark-card', 'border-dark-border', 'text-dark-text');
+            item.classList.add('bg-light-card', 'border-light-border', 'text-light-text');
+        }
+    });
+}
+
+// 初始化标签切换
+function initTabs() {
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // 移除所有标签按钮的活动状态
+            tabButtons.forEach(b => {
+                b.classList.remove('text-primary', 'border-primary');
+                b.classList.add('text-light-text');
+            });
+            
+            // 设置当前标签按钮为活动状态
+            this.classList.remove('text-light-text');
+            this.classList.add('text-primary', 'border-b-2', 'border-primary');
+            
+            // 隐藏所有内容区域
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // 显示对应的内容区域
+            const tabId = this.id.replace('tab', 'content');
+            document.getElementById(tabId).classList.remove('hidden');
+        });
+    });
+}
+
+// 初始化分隔符按钮
+function initSeparatorButtons() {
+    const separatorBtns = document.querySelectorAll('.separator-btn');
+    separatorBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // 重置所有按钮样式
+            separatorBtns.forEach(b => {
+                b.classList.remove('bg-gray-100', 'dark:bg-dark-border');
+                b.classList.add('bg-light-card', 'dark:bg-dark-card');
+            });
+            
+            // 设置当前按钮样式
+            this.classList.remove('bg-light-card', 'dark:bg-dark-card');
+            this.classList.add('bg-gray-100', 'dark:bg-dark-border');
+            
+            // 保存选中的分隔符
+            selectedSeparator = this.dataset.sep;
+        });
+    });
+    
+    // 默认选中逗号
+    document.querySelector('[data-sep=","]').classList.remove('bg-light-card', 'dark:bg-dark-card');
+    document.querySelector('[data-sep=","]').classList.add('bg-gray-100', 'dark:bg-dark-border');
+}
+
+// 初始化备注输入框自动高度调整
+function initAutoResizeTextarea() {
+    const textareas = document.querySelectorAll('textarea');
+    
+    textareas.forEach(textarea => {
+        // 初始化高度
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight) + 'px';
+        
+        // 添加输入事件监听器
+        textarea.addEventListener('input', function() {
+            // 重置高度
+            this.style.height = 'auto';
+            // 设置新高度
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    });
+}
+
+// 初始化所有事件监听器
+function initEventListeners() {
+    console.log('初始化事件监听器');
+    
+    // 随机数生成按钮
+    bindEventListener('generateRandomBtn', 'click', generateRandomNumbers);
+    
+    // 检定按钮
+    bindEventListener('performCheckBtn', 'click', performCheck);
+    
+    // 复制结果按钮
+    bindEventListener('copyResultBtn', 'click', copyResult);
+    bindEventListener('copyCheckResultBtn', 'click', copyCheckResult);
+    
+    // 保存到历史按钮
+    bindEventListener('saveToHistoryBtn', 'click', saveToHistory);
+    bindEventListener('saveCheckToHistoryBtn', 'click', saveCheckToHistory);
+    
+    // 清空加减值按钮
+    bindEventListener('clearModifiers', 'click', function() {
+        document.getElementById('valueModifiers').value = '';
+    });
+    
+    // 清空检定加减值按钮
+    bindEventListener('clearCheckModifiers', 'click', function() {
+        document.getElementById('checkModifiers').value = '';
+    });
+    
+    // 关闭模态框按钮
+    bindEventListener('closeModalBtn', 'click', closeHistoryDetailModal);
+    
+    // 添加历史备注按钮
+    bindEventListener('addHistoryNoteBtn', 'click', () => openNoteEditorModal());
+    
+    // 删除记录按钮
+    bindEventListener('deleteRecordBtn', 'click', function() {
+        if (currentHistoryIndex !== -1 && confirm('确定要删除这条历史记录吗？')) {
+            // 从数组中删除记录
+            historyRecords.splice(currentHistoryIndex, 1);
+            
+            // 保存到本地存储
+            saveHistoryRecords();
+            
+            // 更新历史记录列表
+            updateHistoryList(document.getElementById('historySearch').value.trim());
+            
+            // 关闭模态框
+            closeHistoryDetailModal();
+        }
+    });
+    
+    // 备注编辑器按钮
+    bindEventListener('saveNoteEditorBtn', 'click', saveNoteEditorContent);
+    bindEventListener('cancelNoteEditorBtn', 'click', closeNoteEditorModal);
+    bindEventListener('closeNoteEditorBtn', 'click', closeNoteEditorModal);
+    
+    // 点击模态框背景关闭
+    const modals = document.querySelectorAll('.modal-backdrop');
+    modals.forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                if (this.id === 'historyDetailModal') {
+                    closeHistoryDetailModal();
+                } else if (this.id === 'noteEditorModal') {
+                    closeNoteEditorModal();
+                }
+            }
+        });
+    });
+    
+    // 清空历史记录按钮
+    bindEventListener('clearHistoryBtn', 'click', clearHistory);
+    
+    // 导出历史记录按钮
+    bindEventListener('exportHistoryBtn', 'click', exportHistory);
+    
+    // 历史记录搜索
+    bindEventListener('historySearch', 'input', function() {
+        const filterText = this.value.trim();
+        updateHistoryList(filterText);
+    });
+    
+    // 主题切换按钮
+    bindEventListener('themeToggle', 'click', toggleTheme);
+    
+    console.log('事件监听器初始化完成');
+}
+
+// 安全绑定事件监听器的辅助函数
+function bindEventListener(elementId, eventType, handler) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.addEventListener(eventType, handler);
+        console.log(`绑定事件监听器: ${elementId} (${eventType})`);
+    } else {
+        console.error(`未找到元素: ${elementId}，无法绑定事件监听器`);
+    }
+}
+
+// 打开备注编辑器模态框
+function openNoteEditorModal(noteId = null) {
+    if (currentHistoryIndex === -1) return;
+    
+    const modal = document.getElementById('noteEditorModal');
+    const wrapper = document.getElementById('noteEditorWrapper');
+    const title = document.getElementById('noteEditorTitle');
+    const content = document.getElementById('noteEditorContent');
+    
+    // 重置编辑器状态
+    currentNoteId = noteId;
+    content.value = '';
+    
+    // 设置标题和内容
+    if (noteId) {
+        // 编辑现有备注
+        title.textContent = '编辑历史备注';
+        const record = historyRecords[currentHistoryIndex];
+        const note = record.note.find(n => n.id === noteId);
+        if (note) {
+            content.value = note.content;
+        }
+    } else {
+        // 添加新备注
+        title.textContent = '添加历史备注';
+    }
+    
+    // 显示模态框
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        wrapper.classList.remove('scale-95', 'opacity-0');
+        wrapper.classList.add('scale-100', 'opacity-100');
+    }, 10);
+    
+    // 自动聚焦到文本框
+    setTimeout(() => {
+        content.focus();
+    }, 300);
+}
+
+// 保存备注编辑器内容
+function saveNoteEditorContent() {
+    if (currentHistoryIndex === -1) return;
+    
+    const content = document.getElementById('noteEditorContent').value;
+    const trimmedContent = content.trim();
+    
+    if (trimmedContent) {
+        const record = historyRecords[currentHistoryIndex];
+        
+        if (currentNoteId) {
+            // 更新现有备注
+            const noteIndex = record.note.findIndex(n => n.id === currentNoteId);
+            if (noteIndex !== -1) {
+                record.note[noteIndex].content = content;
+                record.note[noteIndex].timestamp = new Date().toISOString();
+            }
+        } else {
+            // 添加新备注
+            record.note.push({
+                id: Date.now().toString(),
+                content: content,
+                timestamp: new Date().toISOString()
+            });
+        }
+        
+        // 保存到本地存储
+        saveHistoryRecords();
+        
+        // 更新历史记录详情
+        showHistoryDetail(currentHistoryIndex);
+    } else if (currentNoteId) {
+        // 如果内容为空且是编辑状态，则删除该备注
+        deleteNote(currentNoteId);
+    }
+    
+    // 关闭编辑器
+    closeNoteEditorModal();
+}
+
+// 删除单条备注
+function deleteNote(noteId) {
+    if (currentHistoryIndex === -1 || !noteId) return;
+    
+    const record = historyRecords[currentHistoryIndex];
+    const noteIndex = record.note.findIndex(n => n.id === noteId);
+    
+    if (noteIndex !== -1) {
+        // 从数组中删除备注
+        record.note.splice(noteIndex, 1);
+        
+        // 保存到本地存储
+        saveHistoryRecords();
+        
+        // 更新历史记录详情
+        showHistoryDetail(currentHistoryIndex);
+    }
+}
+
+// 关闭备注编辑器模态框
+function closeNoteEditorModal() {
+    const modal = document.getElementById('noteEditorModal');
+    const wrapper = document.getElementById('noteEditorWrapper');
+    
+    // 隐藏模态框
+    wrapper.classList.remove('scale-100', 'opacity-100');
+    wrapper.classList.add('scale-95', 'opacity-0');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        currentNoteId = null;
+    }, 300);
+}
+
+// 关闭历史记录详情模态框
+function closeHistoryDetailModal() {
+    const modal = document.getElementById('historyDetailModal');
+    const contentWrapper = document.getElementById('modalContentWrapper');
+    
+    if (!modal || !contentWrapper) {
+        console.error('模态框元素不存在');
+        return;
+    }
+    
+    // 添加关闭动画
+    contentWrapper.classList.remove('scale-100', 'opacity-100');
+    contentWrapper.classList.add('scale-95', 'opacity-0');
+    
+    // 动画完成后隐藏模态框
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        currentHistoryIndex = -1; // 重置当前查看的索引
+        currentNoteId = null; // 重置当前编辑的备注ID
+    }, 300);
+}
+
+// 生成随机数
+function generateRandomNumbers() {
+    console.log('生成随机数按钮被点击');
+    
+    try {
+        const question = document.getElementById('randomQuestion').value.trim();
+        const creationNote = document.getElementById('randomCreationNote').value.trim(); // 生成备注
+        const min = parseInt(document.getElementById('minValue').value) || 1;
+        const max = parseInt(document.getElementById('maxValue').value) || 100;
+        const count = parseInt(document.getElementById('randomCount').value) || 1;
+        const seed = document.getElementById('randomSeed').value;
+        const allowDuplicates = document.getElementById('allowDuplicates').checked;
+        const modifiers = document.getElementById('valueModifiers').value.trim();
+        const calcMode = document.querySelector('input[name="calcMode"]:checked').value;
+        
+        // 验证输入
+        if (isNaN(min) || isNaN(max) || isNaN(count)) {
+            showResult('请输入有效的数字参数', 'error');
+            return;
+        }
+        
+        if (min > max) {
+            showResult('最小值不能大于最大值', 'error');
+            return;
+        }
+        
+        if (count < 1 || count > 99999) {
+            showResult('数量必须在1到99999之间', 'error');
+            return;
+        }
+        
+        // 解析加减值
+        const modifierOps = parseModifiers(modifiers);
+        
+        // 生成随机数
+        const numbers = generateRandoms(min, max, count, seed, allowDuplicates);
+        
+        // 应用加减值并计算结果
+        let resultHTML = '';
+        if (modifierOps.length > 0) {
+            if (calcMode === 'sum') {
+                // 总和加减值模式
+                const sum = numbers.reduce((a, b) => a + b, 0);
+                const modifiedSum = applyModifiers(sum, modifierOps);
+                
+                // 构建结果HTML
+                resultHTML = `
+                    <div class="w-full">
+                        ${question ? `<div class="text-lg font-medium text-light-text mb-2 transition-colors duration-300">${question}</div>` : ''}
+                        ${creationNote ? `<div class="text-sm text-gray-600 dark:text-gray-400 italic mb-3 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg transition-colors duration-300">
+                            <i class="fa fa-sticky-note-o mr-1"></i>生成备注: ${creationNote.replace(/\n/g, '<br>')}
+                        </div>` : ''}
+                        <div class="text-sm text-light-text mb-3 transition-colors duration-300">生成 ${count} 个 ${min}~${max} 以内的随机数，结果${formatModifiers(modifierOps)}：</div>
+                        <div class="bg-light-bg dark:bg-dark-border p-4 rounded-lg mb-2 font-mono text-sm overflow-x-auto transition-colors duration-300">
+                            ${numbers.join(selectedSeparator)} = ${sum}${formatModifiersForDisplay(modifierOps)} = ${modifiedSum}
+                        </div>
+                        <div class="text-right text-lg font-bold text-primary">${modifiedSum}</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-500 mt-2 flex justify-between">
+                            <span>随机数种子: ${getSeedDisplayName(seed)}</span>
+                            <span>生成时间: ${new Date().toLocaleString()}</span>
+                        </div>
+                    </div>
+                `;
+                
+                // 保存当前结果用于历史记录 - 区分两种备注
+                currentResult = {
+                    type: 'random',
+                    question,
+                    creationNote, // 生成备注
+                    note: [], // 历史备注初始为空数组
+                    min,
+                    max,
+                    count,
+                    seed,
+                    numbers,
+                    sum,
+                    modifiers: modifierOps,
+                    modifiedSum,
+                    calcMode,
+                    timestamp: new Date().toISOString(),
+                    separator: selectedSeparator
+                };
+                
+            } else {
+                // 每个数加减值模式
+                const modifiedNumbers = numbers.map(num => applyModifiers(num, modifierOps));
+                const totalSum = modifiedNumbers.reduce((a, b) => a + b, 0);
+                
+                // 构建结果HTML
+                let detailedCalculation = '';
+                numbers.forEach((num, index) => {
+                    detailedCalculation += `(${num}${formatModifiersForDisplay(modifierOps)})`;
+                    if (index < numbers.length - 1) {
+                        detailedCalculation += ' + ';
+                    }
+                });
+                
+                resultHTML = `
+                    <div class="w-full">
+                        ${question ? `<div class="text-lg font-medium text-light-text mb-2 transition-colors duration-300">${question}</div>` : ''}
+                        ${creationNote ? `<div class="text-sm text-gray-600 dark:text-gray-400 italic mb-3 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg transition-colors duration-300">
+                            <i class="fa fa-sticky-note-o mr-1"></i>生成备注: ${creationNote.replace(/\n/g, '<br>')}
+                        </div>` : ''}
+                        <div class="text-sm text-light-text mb-3 transition-colors duration-300">生成 ${count} 个 ${min}~${max} 以内的随机数，每个结果${formatModifiers(modifierOps)}：</div>
+                        <div class="bg-light-bg dark:bg-dark-border p-4 rounded-lg mb-2 font-mono text-sm overflow-x-auto transition-colors duration-300">
+                            ${detailedCalculation} = ${modifiedNumbers.join(' + ')} = ${totalSum}
+                        </div>
+                        <div class="text-right text-lg font-bold text-primary">${totalSum}</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-500 mt-2 flex justify-between">
+                            <span>随机数种子: ${getSeedDisplayName(seed)}</span>
+                            <span>生成时间: ${new Date().toLocaleString()}</span>
+                        </div>
+                    </div>
+                `;
+                
+                // 保存当前结果用于历史记录 - 区分两种备注
+                currentResult = {
+                    type: 'random',
+                    question,
+                    creationNote, // 生成备注
+                    note: [], // 历史备注初始为空数组
+                    min,
+                    max,
+                    count,
+                    seed,
+                    numbers,
+                    modifiedNumbers,
+                    totalSum,
+                    modifiers: modifierOps,
+                    calcMode,
+                    timestamp: new Date().toISOString(),
+                    separator: selectedSeparator
+                };
+            }
+        } else {
+            // 没有加减值的情况
+            const sum = numbers.reduce((a, b) => a + b, 0);
+            
+            resultHTML = `
+                <div class="w-full">
+                    ${question ? `<div class="text-lg font-medium text-light-text mb-2 transition-colors duration-300">${question}</div>` : ''}
+                    ${creationNote ? `<div class="text-sm text-gray-600 dark:text-gray-400 italic mb-3 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg transition-colors duration-300">
+                        <i class="fa fa-sticky-note-o mr-1"></i>生成备注: ${creationNote.replace(/\n/g, '<br>')}
+                    </div>` : ''}
+                    <div class="text-sm text-light-text mb-3 transition-colors duration-300">生成 ${count} 个 ${min}~${max} 以内的随机数，结果为：</div>
+                    <div class="bg-light-bg dark:bg-dark-border p-4 rounded-lg mb-2 font-mono text-sm overflow-x-auto transition-colors duration-300">
+                        ${numbers.join(selectedSeparator)}
+                        ${count > 1 ? ` = ${sum}` : ''}
+                    </div>
+                    ${count > 1 ? `<div class="text-right text-lg font-bold text-primary">总和: ${sum}</div>` : ''}
+                    <div class="text-xs text-gray-500 dark:text-gray-500 mt-2 flex justify-between">
+                        <span>随机数种子: ${getSeedDisplayName(seed)}</span>
+                        <span>生成时间: ${new Date().toLocaleString()}</span>
+                    </div>
+                </div>
+            `;
+            
+            // 保存当前结果用于历史记录 - 区分两种备注
+            currentResult = {
+                type: 'random',
+                question,
+                creationNote, // 生成备注
+                note: [], // 历史备注初始为空数组
+                min,
+                max,
+                count,
+                seed,
+                numbers,
+                sum,
+                modifiers: [],
+                timestamp: new Date().toISOString(),
+                separator: selectedSeparator
+            };
+        }
+        
+        // 显示结果
+        currentType = 'random';
+        showResult(resultHTML);
+        
+    } catch (error) {
+        console.error('生成随机数时发生错误:', error);
+        showResult(`生成随机数时发生错误: ${error.message}`, 'error');
+    }
+}
+
+// 生成随机数数组
+function generateRandoms(min, max, count, seedType, allowDuplicates) {
+    const numbers = [];
+    const range = max - min + 1;
+    
+    // 根据不同种子类型生成随机数
+    switch(seedType) {
+        case 'NANOSEC':
+            // 使用纳秒级时间作为种子
+            const nanoSeed = performance.now() * 1000000;
+            for (let i = 0; i < count; i++) {
+                const num = generateNumberWithSeed(min, max, nanoSeed + i);
+                if (!allowDuplicates && numbers.includes(num)) {
+                    i--; // 如果不允许重复且已存在，则重试
+                    continue;
+                }
+                numbers.push(num);
+            }
+            break;
+            
+        case 'SECURE':
+            // 使用安全随机数生成器
+            for (let i = 0; i < count; i++) {
+                const array = new Uint32Array(1);
+                crypto.getRandomValues(array);
+                const num = min + (array[0] % range);
+                if (!allowDuplicates && numbers.includes(num)) {
+                    i--; // 如果不允许重复且已存在，则重试
+                    continue;
+                }
+                numbers.push(num);
+            }
+            break;
+            
+        case 'UUID_RANDOM':
+            // 使用UUID作为种子
+            const uuid = crypto.randomUUID();
+            const uuidSeed = parseInt(uuid.replace(/-/g, ''), 16) % 1000000000;
+            for (let i = 0; i < count; i++) {
+                const num = generateNumberWithSeed(min, max, uuidSeed + i);
+                if (!allowDuplicates && numbers.includes(num)) {
+                    i--; // 如果不允许重复且已存在，则重试
+                    continue;
+                }
+                numbers.push(num);
+            }
+            break;
+            
+        case 'XORShift':
+            // 使用XORShift算法
+            let x = Date.now();
+            for (let i = 0; i < count; i++) {
+                x ^= x << 13;
+                x ^= x >> 17;
+                x ^= x << 5;
+                const num = min + (Math.abs(x) % range);
+                if (!allowDuplicates && numbers.includes(num)) {
+                    i--; // 如果不允许重复且已存在，则重试
+                    continue;
+                }
+                numbers.push(num);
+            }
+            break;
+            
+        case 'UUID_SECURE_RANDOM':
+            // 使用安全UUID作为种子
+            const secureUuid = crypto.randomUUID();
+            const secureUuidSeed = parseInt(secureUuid.replace(/-/g, ''), 16) % 1000000000;
+            for (let i = 0; i < count; i++) {
+                const num = generateNumberWithSeed(min, max, secureUuidSeed + i);
+                if (!allowDuplicates && numbers.includes(num)) {
+                    i--; // 如果不允许重复且已存在，则重试
+                    continue;
+                }
+                numbers.push(num);
+            }
+            break;
+            
+        case 'CPP_UNIFORM':
+            // 模拟C++的uniform_int_distribution
+            const cppSeed = Date.now() % 1000000;
+            for (let i = 0; i < count; i++) {
+                const num = generateNumberWithSeed(min, max, cppSeed + i);
+                if (!allowDuplicates && numbers.includes(num)) {
+                    i--; // 如果不允许重复且已存在，则重试
+                    continue;
+                }
+                numbers.push(num);
+            }
+            break;
+            
+        case 'TRUE_RANDOM':
+        default:
+            // 使用默认随机数生成器
+            for (let i = 0; i < count; i++) {
+                const num = Math.floor(Math.random() * range) + min;
+                if (!allowDuplicates && numbers.includes(num)) {
+                    i--; // 如果不允许重复且已存在，则重试
+                    continue;
+                }
+                numbers.push(num);
+            }
+            break;
+    }
+    
+    return numbers;
+}
+
+// 使用种子生成随机数
+function generateNumberWithSeed(min, max, seed) {
+    // 使用简单的伪随机算法
+    const x = Math.sin(seed) * 10000;
+    return min + Math.floor((x - Math.floor(x)) * (max - min + 1));
+}
+
+// 执行COC检定
+function performCheck() {
+    console.log('执行检定按钮被点击');
+    
+    try {
+        const question = document.getElementById('checkQuestion').value.trim();
+        const creationNote = document.getElementById('checkCreationNote').value.trim(); // 生成备注
+        let skillValue = parseInt(document.getElementById('skillValue').value) || 50;
+        const count = parseInt(document.getElementById('checkCount').value) || 1;
+        const seed = document.getElementById('checkSeed').value;
+        const modifierTarget = document.getElementById('modifierTarget').value;
+        const modifiers = document.getElementById('checkModifiers').value.trim();
+        
+        // 验证输入
+        if (isNaN(skillValue) || skillValue < 1 || skillValue > 100) {
+            showCheckResult('技能数值必须在1到100之间', 'error');
+            return;
+        }
+        
+        if (isNaN(count) || count < 1 || count > 99999) {
+            showCheckResult('检定数量必须在1到99999之间', 'error');
+            return;
+        }
+        
+        // 解析加减值
+        const modifierOps = parseModifiers(modifiers);
+        
+        // 应用加减值
+        let modifiedSkillValue = skillValue;
+        let modifiedResults = [];
+        
+        if (modifierTarget === 'skill' && modifierOps.length > 0) {
+            modifiedSkillValue = applyModifiers(skillValue, modifierOps);
+            // 确保技能值在1-100范围内
+            modifiedSkillValue = Math.max(1, Math.min(100, modifiedSkillValue));
+        }
+        
+        // 生成1-100的随机数
+        const checkResults = generateRandoms(1, 100, count, seed, true);
+        
+        // 如果加减值针对结果
+        if (modifierTarget === 'result' && modifierOps.length > 0) {
+            modifiedResults = checkResults.map(result => {
+                const modified = applyModifiers(result, modifierOps);
+                // 确保结果在1-100范围内
+                return Math.max(1, Math.min(100, modified));
+            });
+        } else {
+            modifiedResults = [...checkResults];
+        }
+        
+        // 判定结果
+        const 判定Results = modifiedResults.map(result => {
+            return determineCheckResult(result, modifiedSkillValue);
+        });
+        
+        // 构建结果HTML
+        let resultHTML = `
+            <div class="w-full">
+                ${question ? `<div class="text-lg font-medium text-light-text mb-2 transition-colors duration-300">${question}</div>` : ''}
+                ${creationNote ? `<div class="text-sm text-gray-600 dark:text-gray-400 italic mb-3 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg transition-colors duration-300">
+                    <i class="fa fa-sticky-note-o mr-1"></i>生成备注: ${creationNote.replace(/\n/g, '<br>')}
+                </div>` : ''}
+                <div class="text-sm text-light-text mb-3 transition-colors duration-300">进行 ${count} 次检定 (技能值: ${skillValue}${modifierTarget === 'skill' && modifierOps.length > 0 ? formatModifiersForDisplay(modifierOps) + ` = ${modifiedSkillValue}` : ''})：</div>
+                
+                <div class="bg-light-bg dark:bg-dark-border p-4 rounded-lg mb-4 overflow-x-auto transition-colors duration-300">
+                    <table class="min-w-full font-mono text-sm">
+                        <thead>
+                            <tr class="border-b border-light-border dark:border-dark-border transition-colors duration-300">
+                                <th class="py-2 text-left text-light-text transition-colors duration-300">检定结果</th>
+                                <th class="py-2 text-left text-light-text transition-colors duration-300">判定</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+        
+        modifiedResults.forEach((result, index) => {
+            const originalResult = checkResults[index];
+            const resultClass = getResultClass(判定Results[index].type);
+            const modifierDisplay = modifierTarget === 'result' && modifierOps.length > 0 
+                ? ` (${originalResult}${formatModifiersForDisplay(modifierOps)})` 
+                : '';
+            
+            resultHTML += `
+                <tr class="border-b border-light-border dark:border-dark-border hover:bg-gray-100 dark:hover:bg-dark-border transition-colors duration-300">
+                    <td class="py-2">${result}${modifierDisplay}</td> <!-- 修正：移除多余的record. -->
+                    <td class="py-2"><span class="${resultClass} px-3 py-1 rounded-full text-xs font-bold">${判定Results[index].name}</span></td>
+                </tr>
+            `;
+        });
+        
+        resultHTML += `
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                <div class="bg-light-bg dark:bg-dark-border p-2 rounded transition-colors duration-300">大成功: ${判定Results.filter(r => r.type === 'criticalSuccess').length}</div>
+                <div class="bg-light-bg dark:bg-dark-border p-2 rounded transition-colors duration-300">极难成功: ${判定Results.filter(r => r.type === 'extremeSuccess').length}</div>
+                <div class="bg-light-bg dark:bg-dark-border p-2 rounded transition-colors duration-300">困难成功: ${判定Results.filter(r => r.type === 'hardSuccess').length}</div>
+                <div class="bg-light-bg dark:bg-dark-border p-2 rounded transition-colors duration-300">普通成功: ${判定Results.filter(r => r.type === 'success').length}</div>
+                <div class="bg-light-bg dark:bg-dark-border p-2 rounded transition-colors duration-300">失败: ${判定Results.filter(r => r.type === 'failure').length}</div>
+                <div class="bg-light-bg dark:bg-dark-border p-2 rounded transition-colors duration-300">大失败: ${判定Results.filter(r => r.type === 'criticalFailure').length}</div>
+            </div>
+            
+            <div class="text-xs text-gray-500 dark:text-gray-500 mt-2 flex justify-between">
+                <span>随机数种子: ${getSeedDisplayName(seed)}</span>
+                <span>生成时间: ${new Date().toLocaleString()}</span>
+            </div>
+        </div>
+        `;
+        
+        // 保存当前结果用于历史记录 - 区分两种备注
+        currentResult = {
+            type: 'check',
+            question,
+            creationNote, // 生成备注
+            note: [], // 历史备注初始为空数组
+            skillValue,
+            modifiedSkillValue,
+            count,
+            seed,
+            results: checkResults,
+            modifiedResults,
+           判定Results,
+            modifiers: modifierOps,
+            modifierTarget,
+            timestamp: new Date().toISOString()
+        };
+        
+        // 显示结果
+        currentType = 'check';
+        showCheckResult(resultHTML);
+        
+    } catch (error) {
+        console.error('执行检定时发生错误:', error);
+        showCheckResult(`执行检定时发生错误: ${error.message}`, 'error');
+    }
+}
+
+// 判定检定结果
+function determineCheckResult(result, skillValue) {
+    if (result >= 96) {
+        return { type: 'criticalFailure', name: '大失败' };
+    } else if (result <= 5) {
+        return { type: 'criticalSuccess', name: '大成功' };
+    } else if (result <= skillValue / 5) {
+        return { type: 'extremeSuccess', name: '极难成功' };
+    } else if (result <= skillValue / 2) {
+        return { type: 'hardSuccess', name: '困难成功' };
+    } else if (result <= skillValue) {
+        return { type: 'success', name: '普通成功' };
+    } else {
+        return { type: 'failure', name: '失败' };
+    }
+}
+
+// 获取结果类型对应的CSS类
+function getResultClass(resultType) {
+    switch(resultType) {
+        case 'criticalSuccess': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300';
+        case 'extremeSuccess': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300';
+        case 'hardSuccess': return 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300';
+        case 'success': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300';
+        case 'failure': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300';
+        case 'criticalFailure': return 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300';
+        default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+    }
+}
+
+// 显示随机数结果
+function showResult(content, type = 'result') {
+    const container = document.getElementById('resultContainer');
+    
+    if (!container) {
+        console.error('结果容器不存在');
+        return;
+    }
+    
+    if (type === 'error') {
+        container.innerHTML = `
+            <div class="w-full bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4 transition-colors duration-300">
+                <div class="flex items-start">
+                    <i class="fa fa-exclamation-circle text-red-500 dark:text-red-400 mt-1 mr-3"></i>
+                    <div>
+                        <p class="text-red-700 dark:text-red-300 font-medium">错误</p>
+                        <p class="text-red-600 dark:text-red-400 text-sm mt-1">${content}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        container.innerHTML = content;
+    }
+}
+
+// 显示检定结果
+function showCheckResult(content, type = 'result') {
+    const container = document.getElementById('checkResultContainer');
+    
+    if (!container) {
+        console.error('检定结果容器不存在');
+        return;
+    }
+    
+    if (type === 'error') {
+        container.innerHTML = `
+            <div class="w-full bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4 transition-colors duration-300">
+                <div class="flex items-start">
+                    <i class="fa fa-exclamation-circle text-red-500 dark:text-red-400 mt-1 mr-3"></i>
+                    <div>
+                        <p class="text-red-700 dark:text-red-300 font-medium">错误</p>
+                        <p class="text-red-600 dark:text-red-400 text-sm mt-1">${content}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        container.innerHTML = content;
+    }
+}
+
+// 复制随机数结果到剪贴板
+function copyResult() {
+    if (!currentResult || currentResult.type !== 'random') {
+        showResult('没有可复制的结果', 'error');
+        return;
+    }
+    
+    let textToCopy = '';
+    const record = currentResult;
+    
+    if (record.question) textToCopy += `${record.question}\n`;
+    if (record.creationNote) textToCopy += `生成备注: ${record.creationNote}\n`;
+    
+    // 添加历史备注
+    if (Array.isArray(record.note) && record.note.length > 0) {
+        textToCopy += '\n历史备注:\n';
+        record.note.forEach((note, index) => {
+            textToCopy += `${index + 1}. ${note.content.replace(/\n/g, ' ')}\n`;
+        });
+    }
+    
+    if (record.modifiers.length > 0 && record.calcMode === 'sum') {
+        textToCopy += `\n生成 ${record.count} 个 ${record.min}~${record.max} 以内的随机数，结果${formatModifiers(record.modifiers)}：\n`;
+        textToCopy += `${record.numbers.join(record.separator)} = ${record.sum}${formatModifiersForDisplay(record.modifiers)} = ${record.modifiedSum}`;
+    } else if (record.modifiers.length > 0 && record.calcMode === 'each') {
+        textToCopy += `\n生成 ${record.count} 个 ${record.min}~${record.max} 以内的随机数，每个结果${formatModifiers(record.modifiers)}：\n`;
+        let detailedCalculation = '';
+        record.numbers.forEach((num, index) => {
+            detailedCalculation += `(${num}${formatModifiersForDisplay(record.modifiers)})`;
+            if (index < record.numbers.length - 1) detailedCalculation += ' + ';
+        });
+        textToCopy += `${detailedCalculation} = ${record.modifiedNumbers.join(' + ')} = ${record.totalSum}`;
+    } else {
+        textToCopy += `\n生成 ${record.count} 个 ${record.min}~${record.max} 以内的随机数，结果为：\n`;
+        textToCopy += record.numbers.join(record.separator);
+        if (record.count > 1) textToCopy += ` = ${record.sum}`;
+    }
+    
+    // 复制到剪贴板
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        // 显示复制成功提示
+        const copyBtn = document.getElementById('copyResultBtn');
+        const originalText = copyBtn.innerHTML;
+        
+        copyBtn.innerHTML = '<i class="fa fa-check mr-1"></i>已复制';
+        copyBtn.classList.remove('border-light-border', 'text-light-text', 'hover:bg-gray-50', 'dark:hover:bg-dark-border');
+        copyBtn.classList.add('border-green-300', 'text-green-700', 'bg-green-50', 'dark:border-green-800', 'dark:text-green-400', 'dark:bg-green-900/20');
+        
+        // 恢复原始状态
+        setTimeout(() => {
+            copyBtn.innerHTML = originalText;
+            copyBtn.classList.remove('border-green-300', 'text-green-700', 'bg-green-50', 'dark:border-green-800', 'dark:text-green-400', 'dark:bg-green-900/20');
+            copyBtn.classList.add('border-light-border', 'text-light-text', 'hover:bg-gray-50', 'dark:hover:bg-dark-border');
+        }, 2000);
+    }).catch(err => {
+        showResult('复制失败: ' + err.message, 'error');
+    });
+}
+
+// 复制检定结果到剪贴板
+function copyCheckResult() {
+    if (!currentResult || currentResult.type !== 'check') {
+        showCheckResult('没有可复制的结果', 'error');
+        return;
+    }
+    
+    let textToCopy = '';
+    const record = currentResult;
+    
+    if (record.question) textToCopy += `${record.question}\n`;
+    if (record.creationNote) textToCopy += `生成备注: ${record.creationNote}\n`;
+    
+    // 添加历史备注
+    if (Array.isArray(record.note) && record.note.length > 0) {
+        textToCopy += '\n历史备注:\n';
+        record.note.forEach((note, index) => {
+            textToCopy += `${index + 1}. ${note.content.replace(/\n/g, ' ')}\n`;
+        });
+    }
+    
+    textToCopy += `\n进行 ${record.count} 次检定 (技能值: ${record.skillValue}${record.modifierTarget === 'skill' && record.modifiers.length > 0 ? ` ${formatModifiersForDisplay(record.modifiers)} = ${record.modifiedSkillValue}` : ''})\n\n`;
+    
+    textToCopy += '检定结果:\n';
+    record.modifiedResults.forEach((result, index) => {
+        const originalResult = record.results[index];
+        const modifierDisplay = record.modifierTarget === 'result' && record.modifiers.length > 0 
+            ? ` (${originalResult}${formatModifiersForDisplay(record.modifiers)})` 
+            : '';
+            
+        textToCopy += `${result}${modifierDisplay}: ${record.判定Results[index].name}\n`;
+    });
+    
+    // 复制到剪贴板
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        // 显示复制成功提示
+        const copyBtn = document.getElementById('copyCheckResultBtn');
+        const originalText = copyBtn.innerHTML;
+        
+        copyBtn.innerHTML = '<i class="fa fa-check mr-1"></i>已复制';
+        copyBtn.classList.remove('border-light-border', 'text-light-text', 'hover:bg-gray-50', 'dark:hover:bg-dark-border');
+        copyBtn.classList.add('border-green-300', 'text-green-700', 'bg-green-50', 'dark:border-green-800', 'dark:text-green-400', 'dark:bg-green-900/20');
+        
+        // 恢复原始状态
+        setTimeout(() => {
+            copyBtn.innerHTML = originalText;
+            copyBtn.classList.remove('border-green-300', 'text-green-700', 'bg-green-50', 'dark:border-green-800', 'dark:text-green-400', 'dark:bg-green-900/20');
+            copyBtn.classList.add('border-light-border', 'text-light-text', 'hover:bg-gray-50', 'dark:hover:bg-dark-border');
+        }, 2000);
+    }).catch(err => {
+        showCheckResult('复制失败: ' + err.message, 'error');
+    });
+}
+
+// 保存随机数结果到历史记录
+function saveToHistory() {
+    if (!currentResult || currentResult.type !== 'random') {
+        showResult('没有可保存的结果', 'error');
+        return;
+    }
+    
+    console.log('保存随机数结果到历史记录');
+    
+    // 添加到历史记录数组
+    historyRecords.unshift(currentResult);
+    
+    // 保存到本地存储
+    saveHistoryRecords();
+    
+    // 更新历史记录列表
+    updateHistoryList();
+    
+    // 清空生成备注输入框
+    document.getElementById('randomCreationNote').value = '';
+    // 重置备注输入框高度
+    const noteInput = document.getElementById('randomCreationNote');
+    noteInput.style.height = 'auto';
+    noteInput.style.height = (noteInput.scrollHeight) + 'px';
+    
+    // 显示保存成功提示
+    const saveBtn = document.getElementById('saveToHistoryBtn');
+    const originalText = saveBtn.innerHTML;
+    
+    saveBtn.innerHTML = '<i class="fa fa-check mr-1"></i>已保存';
+    saveBtn.classList.remove('bg-primary/10', 'text-primary', 'hover:bg-primary/20');
+    saveBtn.classList.add('bg-green-100', 'text-green-700', 'hover:bg-green-200', 'dark:bg-green-900/30', 'dark:text-green-300', 'dark:hover:bg-green-900/40');
+    
+    // 恢复原始状态
+    setTimeout(() => {
+        saveBtn.innerHTML = originalText;
+        saveBtn.classList.remove('bg-green-100', 'text-green-700', 'hover:bg-green-200', 'dark:bg-green-900/30', 'dark:text-green-300', 'dark:hover:bg-green-900/40');
+        saveBtn.classList.add('bg-primary/10', 'text-primary', 'hover:bg-primary/20');
+    }, 2000);
+}
+
+// 保存检定结果到历史记录
+function saveCheckToHistory() {
+    if (!currentResult || currentResult.type !== 'check') {
+        showCheckResult('没有可保存的结果', 'error');
+        return;
+    }
+    
+    console.log('保存检定结果到历史记录');
+    
+    // 添加到历史记录数组
+    historyRecords.unshift(currentResult);
+    
+    // 保存到本地存储
+    saveHistoryRecords();
+    
+    // 更新历史记录列表
+    updateHistoryList();
+    
+    // 清空生成备注输入框
+    document.getElementById('checkCreationNote').value = '';
+    // 重置备注输入框高度
+    const noteInput = document.getElementById('checkCreationNote');
+    noteInput.style.height = 'auto';
+    noteInput.style.height = (noteInput.scrollHeight) + 'px';
+    
+    // 显示保存成功提示
+    const saveBtn = document.getElementById('saveCheckToHistoryBtn');
+    const originalText = saveBtn.innerHTML;
+    
+    saveBtn.innerHTML = '<i class="fa fa-check mr-1"></i>已保存';
+    saveBtn.classList.remove('bg-secondary/10', 'text-secondary', 'hover:bg-secondary/20');
+    saveBtn.classList.add('bg-green-100', 'text-green-700', 'hover:bg-green-200', 'dark:bg-green-900/30', 'dark:text-green-300', 'dark:hover:bg-green-900/40');
+    
+    // 恢复原始状态
+    setTimeout(() => {
+        saveBtn.innerHTML = originalText;
+        saveBtn.classList.remove('bg-green-100', 'text-green-700', 'hover:bg-green-200', 'dark:bg-green-900/30', 'dark:text-green-300', 'dark:hover:bg-green-900/40');
+        saveBtn.classList.add('bg-secondary/10', 'text-secondary', 'hover:bg-secondary/20');
+    }, 2000);
+}
+
+// 更新历史记录列表
+function updateHistoryList(filterText = '') {
+    const historyList = document.getElementById('historyList');
+    
+    if (!historyList) {
+        console.error('历史记录列表容器不存在');
+        return;
+    }
+    
+    if (historyRecords.length === 0) {
+        historyList.innerHTML = `
+            <div class="text-center text-gray-500 dark:text-gray-400 py-10">
+                <i class="fa fa-folder-open-o text-3xl mb-2"></i>
+                <p>历史记录为空</p>
+                <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">生成随机数或检定后将显示在这里</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // 过滤历史记录
+    let filteredRecords = historyRecords;
+    if (filterText) {
+        const lowerFilter = filterText.toLowerCase();
+        filteredRecords = historyRecords.filter(record => {
+            // 搜索问题
+            if (record.question && record.question.toLowerCase().includes(lowerFilter)) return true;
+            // 搜索生成备注
+            if (record.creationNote && record.creationNote.toLowerCase().includes(lowerFilter)) return true;
+            // 搜索历史备注
+            if (Array.isArray(record.note) && record.note.some(note => note.content.toLowerCase().includes(lowerFilter))) return true;
+            // 搜索随机数结果
+            if (record.type === 'random' && record.numbers.some(num => num.toString().includes(lowerFilter))) return true;
+            // 搜索检定结果
+            if (record.type === 'check' && record.modifiedResults.some(res => res.toString().includes(lowerFilter))) return true;
+            return false;
+        });
+    }
+    
+    if (filteredRecords.length === 0) {
+        historyList.innerHTML = `
+            <div class="text-center text-gray-500 dark:text-gray-400 py-10">
+                <i class="fa fa-search text-3xl mb-2"></i>
+                <p>没有找到匹配的历史记录</p>
+                <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">尝试其他搜索关键词</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // 构建历史记录列表
+    let historyHTML = '';
+    filteredRecords.forEach((record, index) => {
+        const date = new Date(record.timestamp);
+        const dateStr = date.toLocaleString();
+        const originalIndex = historyRecords.indexOf(record);
+        
+        // 检查是否有任何备注
+        const hasNotes = record.creationNote || (Array.isArray(record.note) && record.note.length > 0);
+        const noteIcon = hasNotes ? `<i class="fa fa-sticky-note-o text-yellow-500 dark:text-yellow-400 ml-1"></i>` : '';
+        
+        if (record.type === 'random') {
+            // 随机数记录
+            const title = record.question || '随机数生成';
+            const shortResult = record.numbers.length > 5 
+                ? `${record.numbers.slice(0, 5).join(record.separator)}... (共${record.numbers.length}个)`
+                : record.numbers.join(record.separator);
+            
+            // 显示备注摘要
+            const noteSummary = hasNotes ? `
+                <div class="text-xs text-gray-600 dark:text-gray-400 italic mt-1 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded-lg transition-colors duration-300">
+                    <i class="fa fa-sticky-note-o mr-1"></i>备注: ${
+                        record.creationNote ? '生成备注' : ''
+                    }${record.creationNote && Array.isArray(record.note) && record.note.length > 0 ? ' 和 ' : ''}${
+                        Array.isArray(record.note) && record.note.length > 0 ? `${record.note.length}条历史备注` : ''
+                    }
+                </div>
+            ` : '';
+            
+            historyHTML += `
+                <div class="history-item border border-light-border dark:border-dark-border rounded-lg p-4 hover:shadow-md transition cursor-pointer relative bg-light-card dark:bg-dark-card text-light-text dark:text-light-text transition-colors duration-300" data-index="${originalIndex}">
+                    <button class="delete-history absolute top-2 right-2 text-gray-400 hover:text-danger dark:hover:text-danger p-1 transition-colors duration-300 z-10">
+                        <i class="fa fa-times"></i>
+                    </button>
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-medium truncate">${title}${noteIcon}</h3>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">${dateStr}</span>
+                    </div>
+                    <p class="text-sm text-light-text dark:text-light-text mb-1 truncate transition-colors duration-300">${record.min}~${record.max}，${record.count}个随机数</p>
+                    <div class="text-sm font-mono bg-light-bg dark:bg-dark-border p-2 rounded truncate transition-colors duration-300">${shortResult}</div>
+                    ${noteSummary}
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-2 flex justify-between">
+                        <span>种子: ${getSeedDisplayName(record.seed)}</span>
+                        <span>${record.modifiers.length > 0 ? '带加减值' : ''}</span>
+                    </div>
+                </div>
+            `;
+        } else {
+            // 检定记录
+            const title = record.question || 'COC检定';
+            const successCount = record.判定Results.filter(r => 
+                r.type === 'criticalSuccess' || r.type === 'extremeSuccess' || 
+                r.type === 'hardSuccess' || r.type === 'success'
+            ).length;
+            
+            // 显示备注摘要
+            const noteSummary = hasNotes ? `
+                <div class="text-xs text-gray-600 dark:text-gray-400 italic mt-1 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded-lg transition-colors duration-300">
+                    <i class="fa fa-sticky-note-o mr-1"></i>备注: ${
+                        record.creationNote ? '生成备注' : ''
+                    }${record.creationNote && Array.isArray(record.note) && record.note.length > 0 ? ' 和 ' : ''}${
+                        Array.isArray(record.note && record.note.length > 0) ? `${record.note.length}条历史备注` : ''
+                    }
+                </div>
+            ` : '';
+            
+            historyHTML += `
+                <div class="history-item border border-light-border dark:border-dark-border rounded-lg p-4 hover:shadow-md transition cursor-pointer relative bg-light-card dark:bg-dark-card text-light-text dark:text-light-text transition-colors duration-300" data-index="${originalIndex}">
+                    <button class="delete-history absolute top-2 right-2 text-gray-400 hover:text-danger dark:hover:text-danger p-1 transition-colors duration-300 z-10">
+                        <i class="fa fa-times"></i>
+                    </button>
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-medium truncate">${title}${noteIcon}</h3>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">${dateStr}</span>
+                    </div>
+                    <p class="text-sm text-light-text dark:text-light-text mb-1 transition-colors duration-300">技能值: ${record.skillValue}${record.modifiers.length > 0 ? ` (${record.modifiedSkillValue})` : ''}，${record.count}次检定</p>
+                    <div class="text-sm bg-light-bg dark:bg-dark-border p-2 rounded transition-colors duration-300">
+                        <span class="text-green-600 dark:text-green-400">成功: ${successCount}</span> / 
+                        <span class="text-red-600 dark:text-red-400">失败: ${record.count - successCount}</span>
+                    </div>
+                    ${noteSummary}
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-2 flex justify-between">
+                        <span>种子: ${getSeedDisplayName(record.seed)}</span>
+                        <span>${record.modifiers.length > 0 ? '带加减值' : ''}</span>
+                    </div>
+                </div>
+            `;
+        }
+    });
+    
+    historyList.innerHTML = historyHTML;
+    
+    // 添加历史记录点击事件
+    document.querySelectorAll('.history-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            if (e.target.closest('.delete-history')) return;
+            const index = parseInt(this.dataset.index);
+            showHistoryDetail(index);
+        });
+    });
+    
+    // 添加删除单个历史记录的事件监听
+    document.querySelectorAll('.delete-history').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const index = parseInt(this.dataset.index);
+            
+            if (confirm('确定要删除这条历史记录吗？')) {
+                historyRecords.splice(index, 1);
+                saveHistoryRecords();
+                updateHistoryList(filterText);
+            }
+        });
+    });
+}
+
+// 显示历史记录详情 - 显示多条历史备注
+function showHistoryDetail(index) {
+    const record = historyRecords[index];
+    const modalTitle = document.getElementById('modalTitle');
+    const modalContent = document.getElementById('modalContent');
+    const modal = document.getElementById('historyDetailModal');
+    const contentWrapper = document.getElementById('modalContentWrapper');
+    
+    if (!record || !modalTitle || !modalContent || !modal || !contentWrapper) {
+        console.error('模态框元素或记录数据不存在');
+        return;
+    }
+    
+    currentHistoryIndex = index;
+    
+    if (record.type === 'random') {
+        // 随机数详情
+        modalTitle.textContent = record.question || '随机数生成详情';
+        
+        // 处理生成备注显示
+        const creationNoteHTML = record.creationNote ? `
+            <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg mb-4 transition-colors duration-300">
+                <div class="font-medium text-gray-700 dark:text-gray-300 mb-1">生成备注:</div>
+                <div class="text-gray-600 dark:text-gray-400 whitespace-pre-line">${record.creationNote}</div>
+            </div>
+        ` : '<div class="text-gray-500 dark:text-gray-400 mb-4">无生成备注</div>';
+        
+        // 处理历史备注显示（多条）
+        let historyNotesHTML = '';
+        if (Array.isArray(record.note) && record.note.length > 0) {
+            historyNotesHTML = '<div class="mb-4"><div class="font-medium text-gray-700 dark:text-gray-300 mb-2">历史备注:</div>';
+            
+            // 按时间戳排序，最新的在前面
+            const sortedNotes = [...record.note].sort((a, b) => 
+                new Date(b.timestamp) - new Date(a.timestamp)
+            );
+            
+            sortedNotes.forEach(note => {
+                const noteDate = new Date(note.timestamp).toLocaleString();
+                historyNotesHTML += `
+                    <div class="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg mb-3 border border-yellow-200 dark:border-yellow-800 transition-colors duration-300">
+                        <div class="flex justify-between items-center mb-1">
+                            <div class="text-xs text-gray-500 dark:text-gray-400">${noteDate}</div>
+                            <div class="flex space-x-2">
+                                <button class="text-primary hover:text-primary/80 text-sm" onclick="openNoteEditorModal('${note.id}')">
+                                    <i class="fa fa-edit"></i> 编辑
+                                </button>
+                                <button class="delete-btn text-gray-500 hover:text-danger text-sm" onclick="deleteNote('${note.id}')">
+                                    <i class="fa fa-trash"></i> 删除
+                                </button>
+                            </div>
+                        </div>
+                        <div class="text-gray-600 dark:text-gray-400 whitespace-pre-line">${note.content}</div>
+                    </div>
+                `;
+            });
+            
+            historyNotesHTML += '</div>';
+        } else {
+            historyNotesHTML = '<div class="text-gray-500 dark:text-gray-400 mb-4">无历史备注</div>';
+        }
+        
+        let detailHTML = `
+            <div class="space-y-4">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500 dark:text-gray-400">生成时间:</span>
+                    <span>${new Date(record.timestamp).toLocaleString()}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500 dark:text-gray-400">范围:</span>
+                    <span>${record.min}~${record.max}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500 dark:text-gray-400">数量:</span>
+                    <span>${record.count}个</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500 dark:text-gray-400">随机数种子:</span>
+                    <span>${getSeedDisplayName(record.seed)}</span>
+                </div>
+                
+                ${creationNoteHTML}
+                
+                ${historyNotesHTML}
+                
+                ${record.modifiers.length > 0 ? `
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500 dark:text-gray-400">加减值:</span>
+                    <span>${formatModifiers(record.modifiers)}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500 dark:text-gray-400">计算模式:</span>
+                    <span>${record.calcMode === 'sum' ? '总和加减值' : '每个数加减值'}</span>
+                </div>
+                ` : ''}
+                
+                <div class="border-t border-light-border dark:border-dark-border pt-4 transition-colors duration-300">
+                    <h4 class="font-medium mb-2">结果:</h4>
+                    <div class="bg-light-bg dark:bg-dark-border p-3 rounded-lg font-mono text-sm overflow-x-auto transition-colors duration-300">
+        `;
+        
+        if (record.modifiers.length > 0 && record.calcMode === 'sum') {
+            detailHTML += `${record.numbers.join(record.separator)} = ${record.sum}${formatModifiersForDisplay(record.modifiers)} = ${record.modifiedSum}`;
+        } else if (record.modifiers.length > 0 && record.calcMode === 'each') {
+            let detailedCalculation = '';
+            record.numbers.forEach((num, idx) => {
+                detailedCalculation += `(${num}${formatModifiersForDisplay(record.modifiers)})`;
+                if (idx < record.numbers.length - 1) detailedCalculation += ' + ';
+            });
+            detailHTML += `${detailedCalculation} = ${record.modifiedNumbers.join(' + ')} = ${record.totalSum}`;
+        } else {
+            detailHTML += record.numbers.join(record.separator);
+            if (record.count > 1) detailHTML += ` = ${record.sum}`;
+        }
+        
+        detailHTML += `
+                    </div>
+                </div>
+                
+                <div class="border-t border-light-border dark:border-dark-border pt-4 flex justify-end transition-colors duration-300">
+                    <button id="detailDeleteBtn" class="px-4 py-2 bg-danger/10 text-danger rounded-lg text-sm font-medium hover:bg-danger/20 transition flex items-center">
+                        <i class="fa fa-trash mr-1"></i>删除此记录
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        modalContent.innerHTML = detailHTML;
+    } else {
+        // 检定详情
+        modalTitle.textContent = record.question || '检定详情';
+        
+        // 处理生成备注显示
+        const creationNoteHTML = record.creationNote ? `
+            <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg mb-4 transition-colors duration-300">
+                <div class="font-medium text-gray-700 dark:text-gray-300 mb-1">生成备注:</div>
+                <div class="text-gray-600 dark:text-gray-400 whitespace-pre-line">${record.creationNote}</div>
+            </div>
+        ` : '<div class="text-gray-500 dark:text-gray-400 mb-4">无生成备注</div>';
+        
+        // 处理历史备注显示（多条）
+        let historyNotesHTML = '';
+        if (Array.isArray(record.note) && record.note.length > 0) {
+            historyNotesHTML = '<div class="mb-4"><div class="font-medium text-gray-700 dark:text-gray-300 mb-2">历史备注:</div>';
+            
+            // 按时间戳排序，最新的在前面
+            const sortedNotes = [...record.note].sort((a, b) => 
+                new Date(b.timestamp) - new Date(a.timestamp)
+            );
+            
+            sortedNotes.forEach(note => {
+                const noteDate = new Date(note.timestamp).toLocaleString();
+                historyNotesHTML += `
+                    <div class="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg mb-3 border border-yellow-200 dark:border-yellow-800 transition-colors duration-300">
+                        <div class="flex justify-between items-center mb-1">
+                            <div class="text-xs text-gray-500 dark:text-gray-400">${noteDate}</div>
+                            <div class="flex space-x-2">
+                                <button class="text-primary hover:text-primary/80 text-sm" onclick="openNoteEditorModal('${note.id}')">
+                                    <i class="fa fa-edit"></i> 编辑
+                                </button>
+                                <button class="delete-btn text-gray-500 hover:text-danger text-sm" onclick="deleteNote('${note.id}')">
+                                    <i class="fa fa-trash"></i> 删除
+                                </button>
+                            </div>
+                        </div>
+                        <div class="text-gray-600 dark:text-gray-400 whitespace-pre-line">${note.content}</div>
+                    </div>
+                `;
+            });
+            
+            historyNotesHTML += '</div>';
+        } else {
+            historyNotesHTML = '<div class="text-gray-500 dark:text-gray-400 mb-4">无历史备注</div>';
+        }
+        
+        let detailHTML = `
+            <div class="space-y-4">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500 dark:text-gray-400">检定时间:</span>
+                    <span>${new Date(record.timestamp).toLocaleString()}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500 dark:text-gray-400">技能值:</span>
+                    <span>${record.skillValue}${record.modifierTarget === 'skill' && record.modifiers.length > 0 ? ` ${formatModifiersForDisplay(record.modifiers)} = ${record.modifiedSkillValue}` : ''}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500 dark:text-gray-400">数量:</span>
+                    <span>${record.count}次</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500 dark:text-gray-400">随机数种子:</span>
+                    <span>${getSeedDisplayName(record.seed)}</span>
+                </div>
+                
+                ${creationNoteHTML}
+                
+                ${historyNotesHTML}
+                
+                ${record.modifiers.length > 0 ? `
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500 dark:text-gray-400">${record.modifierTarget === 'skill' ? '技能值' : '结果'}加减值:</span>
+                    <span>${formatModifiersForDisplay(record.modifiers)}</span>
+                </div>
+                ` : ''}
+                
+                <div class="border-t border-light-border dark:border-dark-border pt-4 transition-colors duration-300">
+                    <h4 class="font-medium mb-2">检定结果:</h4>
+                    <div class="bg-light-bg dark:bg-dark-border p-3 rounded-lg overflow-x-auto transition-colors duration-300">
+                        <table class="min-w-full font-mono text-sm">
+                            <thead>
+                                <tr class="border-b border-light-border dark:border-dark-border transition-colors duration-300">
+                                    <th class="py-2 text-left">检定结果</th>
+                                    <th class="py-2 text-left">判定</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+        `;
+        
+        record.modifiedResults.forEach((result, index) => {
+            const originalResult = record.results[index];
+            const resultClass = getResultClass(record.判定Results[index].type);
+            const modifierDisplay = record.modifierTarget === 'result' && record.modifiers.length > 0 
+                ? ` (${originalResult}${formatModifiersForDisplay(record.modifiers)})` 
+                : '';
+            
+            detailHTML += `
+                <tr class="border-b border-light-border dark:border-dark-border hover:bg-gray-100 dark:hover:bg-dark-border transition-colors duration-300">
+                    <td class="py-2">${result}${modifierDisplay}</td>
+                    <td class="py-2"><span class="${resultClass} px-3 py-1 rounded-full text-xs font-bold">${record.判定Results[index].name}</span></td>
+                </tr>
+            `;
+        });
+        
+        detailHTML += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs pt-2">
+                    <div class="bg-light-bg dark:bg-dark-border p-2 rounded transition-colors duration-300">大成功: ${record.判定Results.filter(r => r.type === 'criticalSuccess').length}</div>
+                    <div class="bg-light-bg dark:bg-dark-border p-2 rounded transition-colors duration-300">极难成功: ${record.判定Results.filter(r => r.type === 'extremeSuccess').length}</div>
+                    <div class="bg-light-bg dark:bg-dark-border p-2 rounded transition-colors duration-300">困难成功: ${record.判定Results.filter(r => r.type === 'hardSuccess').length}</div>
+                    <div class="bg-light-bg dark:bg-dark-border p-2 rounded transition-colors duration-300">普通成功: ${record.判定Results.filter(r => r.type === 'success').length}</div>
+                    <div class="bg-light-bg dark:bg-dark-border p-2 rounded transition-colors duration-300">失败: ${record.判定Results.filter(r => r.type === 'failure').length}</div>
+                    <div class="bg-light-bg dark:bg-dark-border p-2 rounded transition-colors duration-300">大失败: ${record.判定Results.filter(r => r.type === 'criticalFailure').length}</div>
+                </div>
+                
+                <div class="border-t border-light-border dark:border-dark-border pt-4 flex justify-end transition-colors duration-300">
+                    <button id="detailDeleteBtn" class="px-4 py-2 bg-danger/10 text-danger rounded-lg text-sm font-medium hover:bg-danger/20 transition flex items-center">
+                        <i class="fa fa-trash mr-1"></i>删除此记录
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        modalContent.innerHTML = detailHTML;
+    }
+    
+    // 为详情页中的删除按钮添加事件监听
+    document.getElementById('detailDeleteBtn').addEventListener('click', function() {
+        if (currentHistoryIndex !== -1 && confirm('确定要删除这条历史记录吗？')) {
+            historyRecords.splice(currentHistoryIndex, 1);
+            saveHistoryRecords();
+            updateHistoryList(document.getElementById('historySearch').value.trim());
+            closeHistoryDetailModal();
+        }
+    });
+    
+    // 显示模态框
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        contentWrapper.classList.remove('scale-95', 'opacity-0');
+        contentWrapper.classList.add('scale-100', 'opacity-100');
+    }, 10);
+}
+
+// 清空历史记录
+function clearHistory() {
+    if (confirm('确定要清空所有历史记录吗？此操作不可恢复。')) {
+        historyRecords = [];
+        saveHistoryRecords();
+        updateHistoryList();
+    }
+}
+
+// 导出历史记录
+function exportHistory() {
+    if (historyRecords.length === 0) {
+        alert('没有可导出的历史记录');
+        return;
+    }
+    
+    const historyJSON = JSON.stringify(historyRecords, null, 2);
+    const blob = new Blob([historyJSON], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `随机数生成器历史记录_${new Date().toLocaleDateString().replace(/\//g, '-')}.json`;
+    document.body.appendChild(a);
+    a.click();
+    
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
+}
+
+// 格式化加减值
+function parseModifiers(modifierStr) {
+    if (!modifierStr) return [];
+    
+    if (!['+', '-'].includes(modifierStr[0])) {
+        modifierStr = '+' + modifierStr;
+    }
+    
+    const regex = /([+-]?\d+)/g;
+    const matches = modifierStr.match(regex);
+    
+    if (!matches) return [];
+    
+    return matches.map(match => {
+        const num = parseInt(match);
+        return { op: num >= 0 ? '+' : '-', value: Math.abs(num) };
+    });
+}
+
+// 应用加减值
+function applyModifiers(value, modifiers) {
+    let result = value;
+    modifiers.forEach(mod => {
+        if (mod.op === '+') result += mod.value;
+        else result -= mod.value;
+    });
+    return result;
+}
+
+// 格式化加减值显示文本
+function formatModifiers(modifiers) {
+    if (modifiers.length === 0) return '';
+    return modifiers.map(mod => `${mod.op}${mod.value}`).join('');
+}
+
+// 格式化加减值用于显示
+function formatModifiersForDisplay(modifiers) {
+    if (modifiers.length === 0) return '';
+    return modifiers.map(mod => `${mod.op}${mod.value}`).join('');
+}
+
+// 获取种子显示名称
+function getSeedDisplayName(seedType) {
+    const seedNames = {
+        'NANOSEC': 'NANOSEC',
+        'SECURE': 'SECURE',
+        '_RANDOM': '_RANDOM',
+        'UUID_RANDOM': 'UUID_RANDOM',
+        'XORShift': 'XORShift',
+        'UUID_SECURE_RANDOM': 'UUID_SECURE_RANDOM',
+        'CPP_UNIFORM': 'C++ UNIFORM_INT_DISTRIBUTION',
+        'TRUE_RANDOM': '真随机数'
+    };
+    
+    return seedNames[seedType] || seedType;
+}
+</script>
+</html>
